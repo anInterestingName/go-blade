@@ -1,0 +1,59 @@
+services:
+  # Ory Hydra 依赖的持久化数据库
+  hydra-postgres:
+    image: postgres:16-alpine
+    container_name: blade-hydra-postgres
+    environment:
+      POSTGRES_USER: hydra
+      POSTGRES_PASSWORD: secret_hydra_password
+      POSTGRES_DB: hydra
+    ports:
+      - "5432:5432"
+    volumes:
+      - hydra_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hydra"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Hydra 数据库初始化与 Schema 迁移
+  hydra-migrate:
+    image: oryd/hydra:v2.2.0
+    container_name: blade-hydra-migrate
+    depends_on:
+      hydra-postgres:
+        condition: service_healthy
+    command: migrate sql -e --yes postgres://hydra:secret_hydra_password@hydra-postgres:5432/hydra?sslmode=disable
+    restart: on-failure
+
+  # Ory Hydra OAuth 2.1 / OIDC 授权服务器
+  hydra:
+    image: oryd/hydra:v2.2.0
+    container_name: blade-hydra
+    depends_on:
+      hydra-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "4444:4444" # Public API (Token, Authorization, JWKS)
+      - "4445:4445" # Admin API (Login/Consent Challenge, Client Management)
+    environment:
+      - DSN=postgres://hydra:secret_hydra_password@hydra-postgres:5432/hydra?sslmode=disable
+      - SECRETS_SYSTEM=a_very_secret_32_byte_string_for_hydra_system
+      - DOCKER_TLS_ON_OFF=false
+      - DEV=true # 开发模式禁用严格 TLS（生产请开启严格 TLS）
+      # 对外发行者 URL
+      - URLS_SELF_ISSUER=http://localhost:4444/
+      # services/auth 的交互端点（Login & Consent）
+      - URLS_LOGIN=http://localhost:8080/api/v1/auth/login
+      - URLS_CONSENT=http://localhost:8080/api/v1/auth/consent
+      - URLS_LOGOUT=http://localhost:8080/api/v1/auth/logout
+      # 策略与模式
+      - OAUTH2_EXPOSE_INTERNAL_ERRORS=true
+      - STRATEGIES_ACCESS_TOKEN=jwt # 签发标准 JWT 格式的 Access Token（方便网关离线 JWKS 验签）
+      - TTL_ACCESS_TOKEN=2h
+      - TTL_REFRESH_TOKEN=24h
+    restart: unless-stopped
+
+volumes:
+  hydra_pg_data:

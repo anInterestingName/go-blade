@@ -1,0 +1,200 @@
+syntax = "proto3";
+
+package auth.v1;
+
+option go_package = "github.com/go-blade/api/proto/auth/v1;authv1";
+
+// TokenResult 包含 AccessToken 与 RefreshToken 的返回实体，对标 SpringBlade OAuth2 认证响应。
+message TokenResult {
+  // 访问接口所需携带的凭证
+  string access_token = 1;
+  // 凭证类型，固定为 bearer
+  string token_type = 2;
+  // 用于刷新访问凭证的长效刷新凭证
+  string refresh_token = 3;
+  // 访问凭证有效时长（秒）
+  int64 expires_in = 4;
+  // 版权与签名声明信息
+  string license = 5;
+}
+
+// BladeClaims 对标 SpringBlade 的 BladeUser 声明载荷实体。
+// 涵盖租户标识、用户主键、账号名、昵称、角色及部门等鉴权核心元数据。
+message BladeClaims {
+  // 当前用户所属租户编号
+  string tenant_id = 1;
+  // 系统用户唯一主键
+  int64 user_id = 2;
+  // 所属部门主键
+  int64 dept_id = 3;
+  // 拥有角色主键（多个以逗号拼接）
+  string role_id = 4;
+  // 拥有角色名称
+  string role_name = 5;
+  // 登录账号
+  string account = 6;
+  // 用户真实姓名
+  string user_name = 7;
+  // 用户昵称
+  string nick_name = 8;
+  // 令牌类型区分 ("access_token" | "refresh_token")
+  string category = 9;
+}
+
+// LoginRequest 用户登录请求参数。
+message LoginRequest {
+  // 租户编号
+  string tenant_id = 1;
+  // 用户登录账号
+  string account = 2;
+  // 登录密码（前端哈希或明文）
+  string password = 3;
+  // 验证码唯一标识
+  string captcha_key = 4;
+  // 用户输入的验证码
+  string captcha_code = 5;
+}
+
+// LoginResponse 用户登录响应结果。
+message LoginResponse {
+  // 鉴权结果令牌包
+  TokenResult token_result = 1;
+}
+
+// RefreshTokenRequest 刷新令牌请求参数。
+message RefreshTokenRequest {
+  // 客户端提交的长效刷新令牌
+  string refresh_token = 1;
+}
+
+// RefreshTokenResponse 刷新令牌响应结果。
+message RefreshTokenResponse {
+  // 换发生成的新鉴权结果令牌包
+  TokenResult token_result = 1;
+}
+
+// ValidateTokenRequest 令牌鉴权校验请求参数。
+message ValidateTokenRequest {
+  // 待校验的访问令牌 (Access Token)
+  string token = 1;
+}
+
+// ValidateTokenResponse 令牌鉴权校验响应结果。
+message ValidateTokenResponse {
+  // 校验通过后解析出的用户载荷信息
+  BladeClaims blade_claims = 1;
+}
+
+// GetCaptchaRequest 获取图形验证码请求参数。
+message GetCaptchaRequest {}
+
+// GetCaptchaResponse 获取图形验证码响应结果。
+message GetCaptchaResponse {
+  // 验证码唯一缓存凭证 Key
+  string captcha_key = 1;
+  // Base64 编码的验证码 PNG 图片 (data:image/png;base64,...)
+  string image = 2;
+}
+
+// GetLoginChallengeRequest 查询 Ory Hydra 登录挑战请求参数。
+message GetLoginChallengeRequest {
+  // Hydra 生成的登录挑战标识
+  string login_challenge = 1;
+}
+
+// GetLoginChallengeResponse 查询 Ory Hydra 登录挑战响应结果。
+message GetLoginChallengeResponse {
+  // 登录挑战标识
+  string challenge = 1;
+  // 是否可跳过交互式登录（已存在有效会话）
+  bool skip = 2;
+  // 已认证主体标识
+  string subject = 3;
+  // OAuth 2.1 客户端 ID
+  string client_id = 4;
+  // 若 skip 为 true 时直接接受登录后的重定向地址
+  string redirect_to = 5;
+}
+
+// AcceptLoginChallengeRequest 校验用户凭据并接受 Ory Hydra 登录挑战请求参数。
+message AcceptLoginChallengeRequest {
+  // Hydra 生成的登录挑战标识
+  string login_challenge = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 用户登录账号
+  string account = 3;
+  // 登录密码
+  string password = 4;
+  // 验证码唯一标识
+  string captcha_key = 5;
+  // 用户输入的验证码
+  string captcha_code = 6;
+  // 是否记住本次登录会话
+  bool remember = 7;
+  // 记住登录会话的有效时长（秒）
+  int64 remember_for = 8;
+}
+
+// AcceptLoginChallengeResponse 接受 Ory Hydra 登录挑战响应结果。
+message AcceptLoginChallengeResponse {
+  // Hydra 返回的下一步重定向 URL
+  string redirect_to = 1;
+}
+
+// AcceptConsentChallengeRequest 确认授权并注入 BladeClaims 的 Ory Hydra 授权挑战请求参数。
+message AcceptConsentChallengeRequest {
+  // Hydra 生成的授权挑战标识
+  string consent_challenge = 1;
+  // 批准授予的权限范围列表（为空则默认授予请求的全部 scope）
+  repeated string grant_scope = 2;
+  // 是否记住本次授权决定
+  bool remember = 3;
+  // 记住授权决定的有效时长（秒）
+  int64 remember_for = 4;
+}
+
+// AcceptConsentChallengeResponse 接受 Ory Hydra 授权挑战响应结果。
+message AcceptConsentChallengeResponse {
+  // Hydra 返回的授权完成重定向 URL
+  string redirect_to = 1;
+}
+
+// AcceptLogoutChallengeRequest 接受 Ory Hydra 登出挑战请求参数。
+message AcceptLogoutChallengeRequest {
+  // Hydra 生成的登出挑战标识
+  string logout_challenge = 1;
+}
+
+// AcceptLogoutChallengeResponse 接受 Ory Hydra 登出挑战响应结果。
+message AcceptLogoutChallengeResponse {
+  // Hydra 返回的登出完成重定向 URL
+  string redirect_to = 1;
+}
+
+// AuthService 统一认证与令牌管理 gRPC 服务契约。
+service AuthService {
+  // GetCaptcha 生成并返回图形验证码凭证与图片。
+  rpc GetCaptcha(GetCaptchaRequest) returns (GetCaptchaResponse);
+
+  // Login 账号密码与验证码登录，签发双 Token。
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // RefreshToken 使用长效 Refresh Token 换发新的双 Token。
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // ValidateToken 校验 Access Token 合法性并返回解析出的用户信息 Claims。
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // GetLoginChallenge 查询 Ory Hydra 登录挑战信息（若 skip=true 则自动接受并返回重定向地址）。
+  rpc GetLoginChallenge(GetLoginChallengeRequest) returns (GetLoginChallengeResponse);
+
+  // AcceptLoginChallenge 校验多租户账号密码与验证码，通过后接受 Ory Hydra 登录挑战。
+  rpc AcceptLoginChallenge(AcceptLoginChallengeRequest) returns (AcceptLoginChallengeResponse);
+
+  // AcceptConsentChallenge 接受 Ory Hydra 授权挑战并将 BladeClaims 注入 Token 会话载荷。
+  rpc AcceptConsentChallenge(AcceptConsentChallengeRequest) returns (AcceptConsentChallengeResponse);
+
+  // AcceptLogoutChallenge 接受 Ory Hydra 登出挑战并返回安全重定向地址。
+  rpc AcceptLogoutChallenge(AcceptLogoutChallengeRequest) returns (AcceptLogoutChallengeResponse);
+}

@@ -1,0 +1,29 @@
+Name: gateway-api
+Host: 0.0.0.0
+Port: 8080
+Mode: dev
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9091
+  Path: /metrics
+
+Telemetry:
+  Name: service-gateway
+  Endpoint: http://127.0.0.1:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Auth:
+  AccessSecret: blade-secret-key-for-test-32bytes
+  Whitelist:
+    - /blade-auth/oauth/token
+    - /blade-auth/oauth/captcha
+    - /blade-auth/oauth/refresh-token
+    - /ping
+    - /health
+
+Upstreams:
+  Auth:
+    Target: 127.0.0.1:9001
+    Timeout: 5000

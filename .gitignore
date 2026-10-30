@@ -1,0 +1,52 @@
+# Binaries
+bin/
+dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test artifacts & Fuzz corpus
+*.test
+*.out
+coverage.txt
+**/testdata/fuzz/
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Go workspace sum
+go.work.sum
+
+# Agent tool configurations, skills & scratchpads
+.agents/
+.dsh/
+.scratch/
+
+# Logs
+logs/
+*.log
+
+# Sensitive credentials & Local overrides
+*.env
+*.env.*
+!*.env.example
+*.local.yaml
+*.local.yml
+*.pem
+*.key
+*.crt
+
+# Local runtime data & DB
+data/
+*.sqlite
+*.sqlite3
+*.db

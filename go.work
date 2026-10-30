@@ -1,0 +1,10 @@
+go 1.26.0
+
+use (
+	./api
+	./pkg
+	./services/auth
+	./services/desk
+	./services/gateway
+	./services/system
+)

@@ -1,0 +1,620 @@
+syntax = "proto3";
+
+package system.v1;
+
+option go_package = "github.com/go-blade/api/proto/system/v1;systemv1";
+
+// TenantInfo 租户基础元数据实体。
+message TenantInfo {
+  // 租户编号 (如 "000000")
+  string tenant_id = 1;
+  // 租户名称 (如 "管理租户")
+  string tenant_name = 2;
+  // 联系人
+  string linkman = 3;
+  // 联系电话
+  string contact_number = 4;
+  // 租户状态 (1: 正常, 2: 冻结)
+  int32 status = 5;
+  // 租户主键 ID
+  int64 id = 6;
+  // 联系地址
+  string address = 7;
+}
+
+// UserInfo 系统用户基础信息实体。
+message UserInfo {
+  // 用户主键 ID
+  int64 id = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 登录账号
+  string account = 3;
+  // 用户姓名
+  string name = 4;
+  // 真实别名
+  string real_name = 5;
+  // 电子邮箱
+  string email = 6;
+  // 联系手机
+  string phone = 7;
+  // 所属部门主键
+  int64 dept_id = 8;
+  // 拥有角色主键（多个以逗号拼接）
+  string role_id = 9;
+  // 账号状态 (1: 正常, 2: 冻结)
+  int32 status = 10;
+}
+
+// MenuInfo 菜单与权限按钮实体。
+message MenuInfo {
+  // 菜单主键 ID
+  int64 id = 1;
+  // 父菜单主键 ID (顶级为 0)
+  int64 parent_id = 2;
+  // 路由/菜单编码
+  string code = 3;
+  // 菜单名称
+  string name = 4;
+  // 路由路径
+  string path = 5;
+  // 前端组件路径
+  string component = 6;
+  // 菜单图标
+  string icon = 7;
+  // 排序号
+  int32 sort = 8;
+  // 菜单类型 (1: 菜单, 2: 按钮)
+  int32 category = 9;
+  // 权限操作标识 (如 "user:add")
+  string action = 10;
+}
+
+// DeptInfo 系统部门与组织架构实体。
+message DeptInfo {
+  // 部门主键 ID
+  int64 id = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 父部门主键 ID (顶级为 0)
+  int64 parent_id = 3;
+  // 部门简称
+  string dept_name = 4;
+  // 部门全称
+  string full_name = 5;
+  // 排序号
+  int32 sort = 6;
+  // 备注
+  string remark = 7;
+  // 子部门节点列表
+  repeated DeptInfo children = 8;
+}
+
+// RoleInfo 系统角色实体。
+message RoleInfo {
+  // 角色主键 ID
+  int64 id = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 父角色主键 ID (顶级为 0)
+  int64 parent_id = 3;
+  // 角色名称
+  string role_name = 4;
+  // 角色别名
+  string role_alias = 5;
+  // 排序号
+  int32 sort = 6;
+  // 数据权限类型 (1:全部数据, 2:自定义部门, 3:本级部门, 4:本级及子部门, 5:仅本人数据)
+  int32 data_scope_type = 7;
+  // 自定义数据权限部门主键列表 (逗号分隔，当 data_scope_type=2 时生效)
+  string data_scope_dept_ids = 8;
+}
+
+// DictInfo 系统字典实体。
+message DictInfo {
+  // 字典主键 ID
+  int64 id = 1;
+  // 父字典主键 ID (顶级字典分类为 0)
+  int64 parent_id = 2;
+  // 字典编码
+  string code = 3;
+  // 字典键值 (顶级分类一般为 "-1")
+  string dict_key = 4;
+  // 字典名称/显示值
+  string dict_value = 5;
+  // 排序号
+  int32 sort = 6;
+  // 备注
+  string remark = 7;
+}
+
+// GetTenantRequest 查询租户详情请求。
+message GetTenantRequest {
+  string tenant_id = 1;
+}
+
+// GetTenantResponse 查询租户详情响应。
+message GetTenantResponse {
+  TenantInfo tenant = 1;
+}
+
+// ListTenantsRequest 分页查询系统租户列表请求。
+message ListTenantsRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string tenant_id = 3;
+  string tenant_name = 4;
+}
+
+// ListTenantsResponse 分页查询系统租户列表响应。
+message ListTenantsResponse {
+  repeated TenantInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// SaveTenantRequest 新增或修改系统租户请求。
+message SaveTenantRequest {
+  int64 id = 1;
+  string tenant_id = 2;
+  string tenant_name = 3;
+  string linkman = 4;
+  string contact_number = 5;
+  string address = 6;
+  int32 status = 7;
+}
+
+// SaveTenantResponse 新增或修改系统租户响应。
+message SaveTenantResponse {
+  int64 id = 1;
+  string tenant_id = 2;
+}
+
+// DeleteTenantsRequest 批量逻辑删除系统租户请求。
+message DeleteTenantsRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteTenantsResponse 批量逻辑删除系统租户响应。
+message DeleteTenantsResponse {
+  int64 affected = 1;
+}
+
+// GetUserRequest 查询用户详情请求。
+message GetUserRequest {
+  int64 user_id = 1;
+}
+
+// GetUserResponse 查询用户详情响应。
+message GetUserResponse {
+  UserInfo user = 1;
+  repeated string roles = 2;
+  repeated string permissions = 3;
+}
+
+// GetUserRoutesRequest 获取用户菜单路由请求。
+message GetUserRoutesRequest {
+  int64 user_id = 1;
+  string role_ids = 2;
+}
+
+// GetUserRoutesResponse 获取用户菜单路由响应。
+message GetUserRoutesResponse {
+  repeated MenuInfo routes = 1;
+  repeated string buttons = 2;
+}
+
+// ListUsersRequest 分页查询用户列表请求。
+message ListUsersRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string account = 3;
+  string real_name = 4;
+  int64 dept_id = 5;
+}
+
+// ListUsersResponse 分页查询用户列表响应。
+message ListUsersResponse {
+  repeated UserInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// SaveUserRequest 新增或修改用户请求。
+message SaveUserRequest {
+  int64 id = 1;
+  string account = 2;
+  string password = 3;
+  string name = 4;
+  string real_name = 5;
+  string email = 6;
+  string phone = 7;
+  int64 dept_id = 8;
+  string role_id = 9;
+  int32 status = 10;
+}
+
+// SaveUserResponse 新增或修改用户响应。
+message SaveUserResponse {
+  int64 id = 1;
+}
+
+// DeleteUsersRequest 批量逻辑删除用户请求。
+message DeleteUsersRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteUsersResponse 批量逻辑删除用户响应。
+message DeleteUsersResponse {
+  int64 affected = 1;
+}
+
+// GetDeptTreeRequest 获取部门树请求。
+message GetDeptTreeRequest {
+  string dept_name = 1;
+}
+
+// GetDeptTreeResponse 获取部门树响应。
+message GetDeptTreeResponse {
+  repeated DeptInfo tree = 1;
+}
+
+// SaveDeptRequest 新增或修改部门请求。
+message SaveDeptRequest {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string dept_name = 3;
+  string full_name = 4;
+  int32 sort = 5;
+  string remark = 6;
+}
+
+// SaveDeptResponse 新增或修改部门响应。
+message SaveDeptResponse {
+  int64 id = 1;
+}
+
+// DeleteDeptsRequest 批量逻辑删除部门请求。
+message DeleteDeptsRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteDeptsResponse 批量逻辑删除部门响应。
+message DeleteDeptsResponse {
+  int64 affected = 1;
+}
+
+// ListRolesRequest 分页查询角色列表请求。
+message ListRolesRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string role_name = 3;
+  string role_alias = 4;
+}
+
+// ListRolesResponse 分页查询角色列表响应。
+message ListRolesResponse {
+  repeated RoleInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// SaveRoleRequest 新增或修改角色请求。
+message SaveRoleRequest {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string role_name = 3;
+  string role_alias = 4;
+  int32 sort = 5;
+  int32 data_scope_type = 6;
+  string data_scope_dept_ids = 7;
+}
+
+// GrantRoleDataScopeRequest 为角色配置数据权限类型及自定义部门范围请求。
+message GrantRoleDataScopeRequest {
+  int64 role_id = 1;
+  int32 data_scope_type = 2;
+  repeated int64 dept_ids = 3;
+}
+
+// GrantRoleDataScopeResponse 为角色配置数据权限响应。
+message GrantRoleDataScopeResponse {
+  bool success = 1;
+}
+
+// SaveRoleResponse 新增或修改角色响应。
+message SaveRoleResponse {
+  int64 id = 1;
+}
+
+// DeleteRolesRequest 批量逻辑删除角色请求。
+message DeleteRolesRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteRolesResponse 批量逻辑删除角色响应。
+message DeleteRolesResponse {
+  int64 affected = 1;
+}
+
+// GrantRoleMenusRequest 角色分配菜单权限请求。
+message GrantRoleMenusRequest {
+  repeated int64 role_ids = 1;
+  repeated int64 menu_ids = 2;
+}
+
+// GrantRoleMenusResponse 角色分配菜单权限响应。
+message GrantRoleMenusResponse {
+  bool success = 1;
+}
+
+// GetMenuTreeRequest 获取菜单列表请求。
+message GetMenuTreeRequest {
+  string name = 1;
+  int32 category = 2;
+}
+
+// GetMenuTreeResponse 获取菜单列表响应。
+message GetMenuTreeResponse {
+  repeated MenuInfo list = 1;
+}
+
+// SaveMenuRequest 新增或修改菜单请求。
+message SaveMenuRequest {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string code = 3;
+  string name = 4;
+  string path = 5;
+  string component = 6;
+  string icon = 7;
+  int32 sort = 8;
+  int32 category = 9;
+  string action = 10;
+}
+
+// SaveMenuResponse 新增或修改菜单响应。
+message SaveMenuResponse {
+  int64 id = 1;
+}
+
+// DeleteMenusRequest 批量逻辑删除菜单请求。
+message DeleteMenusRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteMenusResponse 批量逻辑删除菜单响应。
+message DeleteMenusResponse {
+  int64 affected = 1;
+}
+
+// ListDictsRequest 分页查询字典列表请求。
+message ListDictsRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string code = 3;
+  string dict_value = 4;
+  int64 parent_id = 5;
+}
+
+// ListDictsResponse 分页查询字典列表响应。
+message ListDictsResponse {
+  repeated DictInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// SaveDictRequest 新增或修改字典请求。
+message SaveDictRequest {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string code = 3;
+  string dict_key = 4;
+  string dict_value = 5;
+  int32 sort = 6;
+  string remark = 7;
+}
+
+// SaveDictResponse 新增或修改字典响应。
+message SaveDictResponse {
+  int64 id = 1;
+}
+
+// DeleteDictsRequest 批量逻辑删除字典请求。
+message DeleteDictsRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteDictsResponse 批量逻辑删除字典响应。
+message DeleteDictsResponse {
+  int64 affected = 1;
+}
+
+// AuditLogInfo API 操作审计日志实体（对标 blade_log_api）。
+message AuditLogInfo {
+  // 审计记录唯一雪花主键 ID
+  int64 id = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 产生审计日志的服务名称
+  string service_name = 3;
+  // 操作用户主键 ID
+  int64 user_id = 4;
+  // 操作人登录账号
+  string account = 5;
+  // HTTP 请求方法 (POST/PUT/DELETE/PATCH)
+  string method = 6;
+  // HTTP 请求路径
+  string path = 7;
+  // URL 查询参数字符串
+  string query_params = 8;
+  // 经过敏感字段脱敏后的请求体摘要
+  string request_body = 9;
+  // HTTP 响应状态码
+  int32 status_code = 10;
+  // 请求耗时 (毫秒)
+  int64 duration_ms = 11;
+  // 客户端真实 IP
+  string client_ip = 12;
+  // 分布式链路追踪 TraceID
+  string trace_id = 13;
+  // 创建时间
+  string created_at = 14;
+}
+
+// ListAuditLogsRequest 分页查询 API 操作审计日志请求。
+message ListAuditLogsRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string account = 3;
+  string method = 4;
+  string path = 5;
+  int32 status_code = 6;
+  string trace_id = 7;
+}
+
+// ListAuditLogsResponse 分页查询 API 操作审计日志响应。
+message ListAuditLogsResponse {
+  repeated AuditLogInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// ParamInfo 系统动态参数实体（对标 blade_param）。
+message ParamInfo {
+  int64 id = 1;
+  string tenant_id = 2;
+  string param_name = 3;
+  string param_key = 4;
+  string param_value = 5;
+  string remark = 6;
+}
+
+// ListParamsRequest 分页查询系统动态参数请求。
+message ListParamsRequest {
+  int64 current = 1;
+  int64 size = 2;
+  string param_name = 3;
+  string param_key = 4;
+}
+
+// ListParamsResponse 分页查询系统动态参数响应。
+message ListParamsResponse {
+  repeated ParamInfo records = 1;
+  int64 total = 2;
+  int64 size = 3;
+  int64 current = 4;
+}
+
+// SaveParamRequest 新增或修改系统动态参数请求。
+message SaveParamRequest {
+  int64 id = 1;
+  string param_name = 2;
+  string param_key = 3;
+  string param_value = 4;
+  string remark = 5;
+}
+
+// SaveParamResponse 新增或修改系统动态参数响应。
+message SaveParamResponse {
+  int64 id = 1;
+}
+
+// DeleteParamsRequest 批量逻辑删除系统动态参数请求。
+message DeleteParamsRequest {
+  repeated int64 ids = 1;
+}
+
+// DeleteParamsResponse 批量逻辑删除系统动态参数响应。
+message DeleteParamsResponse {
+  int64 affected = 1;
+}
+
+// SystemService 核心系统管理 gRPC 服务契约。
+service SystemService {
+  // GetTenant 查询指定租户的配置与元数据。
+  rpc GetTenant(GetTenantRequest) returns (GetTenantResponse);
+
+  // ListTenants 分页查询系统租户列表。
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+
+  // SaveTenant 新增或更新系统租户。
+  rpc SaveTenant(SaveTenantRequest) returns (SaveTenantResponse);
+
+  // DeleteTenants 批量逻辑删除系统租户。
+  rpc DeleteTenants(DeleteTenantsRequest) returns (DeleteTenantsResponse);
+
+  // GetUser 查询用户详情及关联的权限信息。
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // GetUserRoutes 获取当前用户的菜单树与按钮权限列表。
+  rpc GetUserRoutes(GetUserRoutesRequest) returns (GetUserRoutesResponse);
+
+  // ListUsers 分页查询系统用户列表。
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse);
+
+  // SaveUser 新增或更新系统用户。
+  rpc SaveUser(SaveUserRequest) returns (SaveUserResponse);
+
+  // DeleteUsers 批量逻辑删除系统用户。
+  rpc DeleteUsers(DeleteUsersRequest) returns (DeleteUsersResponse);
+
+  // GetDeptTree 获取系统部门树形结构。
+  rpc GetDeptTree(GetDeptTreeRequest) returns (GetDeptTreeResponse);
+
+  // SaveDept 新增或更新部门信息。
+  rpc SaveDept(SaveDeptRequest) returns (SaveDeptResponse);
+
+  // DeleteDepts 批量逻辑删除部门。
+  rpc DeleteDepts(DeleteDeptsRequest) returns (DeleteDeptsResponse);
+
+  // ListRoles 分页查询角色列表。
+  rpc ListRoles(ListRolesRequest) returns (ListRolesResponse);
+
+  // SaveRole 新增或更新角色。
+  rpc SaveRole(SaveRoleRequest) returns (SaveRoleResponse);
+
+  // DeleteRoles 批量逻辑删除角色。
+  rpc DeleteRoles(DeleteRolesRequest) returns (DeleteRolesResponse);
+
+  // GrantRoleMenus 为角色分配菜单与按钮权限。
+  rpc GrantRoleMenus(GrantRoleMenusRequest) returns (GrantRoleMenusResponse);
+
+  // GrantRoleDataScope 为角色分配数据权限类型与自定义部门集合。
+  rpc GrantRoleDataScope(GrantRoleDataScopeRequest) returns (GrantRoleDataScopeResponse);
+
+  // GetMenuTree 查询菜单与权限按钮列表。
+  rpc GetMenuTree(GetMenuTreeRequest) returns (GetMenuTreeResponse);
+
+  // SaveMenu 新增或更新菜单/按钮。
+  rpc SaveMenu(SaveMenuRequest) returns (SaveMenuResponse);
+
+  // DeleteMenus 批量逻辑删除菜单/按钮。
+  rpc DeleteMenus(DeleteMenusRequest) returns (DeleteMenusResponse);
+
+  // ListDicts 分页查询字典列表。
+  rpc ListDicts(ListDictsRequest) returns (ListDictsResponse);
+
+  // SaveDict 新增或更新字典项。
+  rpc SaveDict(SaveDictRequest) returns (SaveDictResponse);
+
+  // DeleteDicts 批量逻辑删除字典项。
+  rpc DeleteDicts(DeleteDictsRequest) returns (DeleteDictsResponse);
+
+  // ListAuditLogs 分页查询 API 操作审计日志列表。
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+
+  // ListParams 分页查询系统动态参数列表。
+  rpc ListParams(ListParamsRequest) returns (ListParamsResponse);
+
+  // SaveParam 新增或修改系统动态参数。
+  rpc SaveParam(SaveParamRequest) returns (SaveParamResponse);
+
+  // DeleteParams 批量逻辑删除系统动态参数。
+  rpc DeleteParams(DeleteParamsRequest) returns (DeleteParamsResponse);
+}

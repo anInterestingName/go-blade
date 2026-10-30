@@ -1,0 +1,114 @@
+syntax = "proto3";
+
+package desk.v1;
+
+option go_package = "github.com/go-blade/api/proto/desk/v1;deskv1";
+
+// NoticeInfo 通知公告实体。
+message NoticeInfo {
+  // 主键 ID
+  int64 id = 1;
+  // 租户编号
+  string tenant_id = 2;
+  // 公告标题
+  string title = 3;
+  // 公告分类
+  int32 category = 4;
+  // 发布时间
+  string release_time = 5;
+  // 公告正文内容
+  string content = 6;
+  // 业务状态 (1: 正常, 2: 停用)
+  int32 status = 7;
+  // 创建人主键 ID
+  int64 create_user = 8;
+  // 创建部门主键 ID
+  int64 create_dept = 9;
+  // 创建时间
+  string create_time = 10;
+}
+
+// ListNoticesRequest 分页查询通知公告请求。
+message ListNoticesRequest {
+  // 当前页码
+  int64 current = 1;
+  // 每页条数
+  int64 size = 2;
+  // 公告标题（支持模糊匹配）
+  string title = 3;
+  // 公告分类过滤
+  int32 category = 4;
+}
+
+// ListNoticesResponse 分页查询通知公告响应。
+message ListNoticesResponse {
+  // 当前页记录列表
+  repeated NoticeInfo records = 1;
+  // 总记录数
+  int64 total = 2;
+  // 每页大小
+  int64 size = 3;
+  // 当前页码
+  int64 current = 4;
+}
+
+// GetNoticeRequest 查询单条通知公告详情请求。
+message GetNoticeRequest {
+  // 公告主键 ID
+  int64 id = 1;
+}
+
+// GetNoticeResponse 查询单条通知公告详情响应。
+message GetNoticeResponse {
+  // 通知公告详情
+  NoticeInfo notice = 1;
+}
+
+// SaveNoticeRequest 新增或修改通知公告请求。
+message SaveNoticeRequest {
+  // 主键 ID（大于 0 时为修改，小于等于 0 时为新增）
+  int64 id = 1;
+  // 公告标题
+  string title = 2;
+  // 公告分类
+  int32 category = 3;
+  // 发布时间
+  string release_time = 4;
+  // 公告正文内容
+  string content = 5;
+  // 业务状态 (1: 正常, 2: 停用)
+  int32 status = 6;
+}
+
+// SaveNoticeResponse 新增或修改通知公告响应。
+message SaveNoticeResponse {
+  // 保存后的公告主键 ID
+  int64 id = 1;
+}
+
+// DeleteNoticesRequest 批量删除通知公告请求。
+message DeleteNoticesRequest {
+  // 待删除的公告主键 ID 列表
+  repeated int64 ids = 1;
+}
+
+// DeleteNoticesResponse 批量删除通知公告响应。
+message DeleteNoticesResponse {
+  // 受影响的记录行数
+  int64 affected = 1;
+}
+
+// DeskService 协同工作台 gRPC 服务契约。
+service DeskService {
+  // ListNotices 分页查询通知公告列表。
+  rpc ListNotices(ListNoticesRequest) returns (ListNoticesResponse);
+
+  // GetNotice 查询单条通知公告详情。
+  rpc GetNotice(GetNoticeRequest) returns (GetNoticeResponse);
+
+  // SaveNotice 新增或编辑通知公告。
+  rpc SaveNotice(SaveNoticeRequest) returns (SaveNoticeResponse);
+
+  // DeleteNotices 批量逻辑软删除通知公告。
+  rpc DeleteNotices(DeleteNoticesRequest) returns (DeleteNoticesResponse);
+}

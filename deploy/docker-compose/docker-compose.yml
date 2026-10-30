@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # 1. 关系型数据库 (MySQL 8.0)
+  mysql:
+    image: mysql:8.0.33
+    container_name: blade-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: blade
+      TZ: Asia/Shanghai
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../sql:/docker-entrypoint-initdb.d:ro
+
+  # 2. 缓存数据库 (Redis 7.0)
+  redis:
+    image: redis:7.0-alpine
+    container_name: blade-redis
+    restart: always
+    command: redis-server --appendonly yes --requirepass ""
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+
+  # 3. 注册与配置中心 (Nacos 2.2.3)
+  nacos:
+    image: nacos/nacos-server:v2.2.3
+    container_name: blade-nacos
+    restart: always
+    environment:
+      - MODE=standalone
+      - PREFER_HOST_MODE=hostname
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+
+  # 4. 全链路追踪基础设施 (Jaeger All-in-One)
+  jaeger:
+    image: jaegertracing/all-in-one:1.50
+    container_name: blade-jaeger
+    restart: always
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686" # Jaeger Web UI 访问端点
+      - "14268:14268" # OpenTelemetry 上报端点
+      - "14250:14250"
+      - "4317:4317"   # OTLP gRPC 接收端点
+      - "4318:4318"   # OTLP HTTP 接收端点
+      - "9411:9411"
+
+  # 5. 指标监控系统 (Prometheus)
+  prometheus:
+    image: prom/prometheus:v2.47.0
+    container_name: blade-prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+
+  # 6. 对象存储服务 (MinIO)
+  minio:
+    image: minio/minio:latest
+    container_name: blade-minio
+    restart: always
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio-data:/data
+
+  # 7. 分布式消息队列 (Apache Kafka 3.8 KRaft 免 ZooKeeper 单节点模式)
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: blade-kafka
+    restart: always
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@blade-kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+
+volumes:
+  mysql-data:
+  redis-data:
+  minio-data:
+  kafka-data:

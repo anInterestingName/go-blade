@@ -1,0 +1,19 @@
+Name: desk-api
+Host: 0.0.0.0
+Port: 8890
+Mode: dev
+
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9094
+  Path: /metrics
+
+Telemetry:
+  Name: service-desk
+  Endpoint: http://127.0.0.1:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+RpcServer:
+  ListenOn: 0.0.0.0:9003
+  Timeout: 5000
